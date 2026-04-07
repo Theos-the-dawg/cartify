@@ -1,38 +1,43 @@
 const express = require('express');
-const app = express();
-const passport = require('passport');
 const session = require('express-session');
-const bodyParser = require('body-parser');  
-const path =require('path');
+const app = express();
 
-const host = '127.0.0.1';
-const port = 3000;
-
-app.set('view engine', 'ejs'); 
-
-app.set('views', path.join(__dirname, './public/views/')); 
-
-app.use(express.static(path.join(__dirname, 'public')));
-
-//Configure body-parser middleware
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-
-// Configure express-session middleware
+// Middleware
+app.use(express.urlencoded({ extended: true }));
 app.use(session({
-  secret: 'i_am_code_cussler',
-  resave: false,
-  saveUninitialized: false
+    secret: 'your-secret-key', // Change to a secure key
+    resave: false,
+    saveUninitialized: false
 }));
+app.set('view engine', 'ejs');
 
-// Initialize Passport and use it with sessions
-app.use(passport.initialize());
-app.use(passport.session());
-
-app.get('/',(req,res) =>{
-  res.render('index', { title: 'My Express App', message: 'Hello, World!' });
-})
-
-app.listen(port,()=>{
-    console.log(`running on ${host}:${port}`)
+// Routes
+app.get('/login', (_req, res) => {
+    res.render('login');
 });
+
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    
+    // Replace with real validation (e.g., database check)
+    if (username === 'admin' && password === 'password') { // Example
+        req.session.username = username;
+        return res.redirect('/dashboard');
+    }
+    
+    res.render('login', { error: 'Invalid credentials' });
+});
+
+app.get('/dashboard', (req, res) => {
+    if (!req.session.username) {
+        return res.redirect('/login');
+    }
+    res.render('dashboard', { username: req.session.username });
+});
+
+app.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/login');
+});
+
+app.listen(3000, () => console.log('Server running on port 3000'));
